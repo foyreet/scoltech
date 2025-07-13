@@ -23,6 +23,7 @@ A, _, _, _ = np.linalg.lstsq(M_raw_centered, M_ref, rcond=None)
 # 4. Применяем калибровку
 M_calibrated = (M_raw - b) @ A
 
+
 # === ОЦЕНКА КАЧЕСТВА ===
 
 error = np.linalg.norm(M_calibrated - M_ref, axis=1)
