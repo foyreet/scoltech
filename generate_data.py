@@ -4,21 +4,21 @@ from scipy.spatial.transform import Rotation as R
 
 # Константные параметры
 
-bias = np.array([2.0, -1.5, 0.8])  # Смещение (bias)
+bias = np.array([2.0, -1.5, 0.8])  # Смещение (bias) нТл
 
-A = np.array([                   # Матрица искажений (soft-iron)
+A = np.array([                   # Матрица искажений (soft-iron) Безразмерная
     [1.05, 0.02, 0.01],
     [0.01, 0.98, -0.03],
     [-0.01, 0.02, 1.02]
 ])
 
-sensitivity = np.array([0.95, 1.03, 1.00])  # Чувствительность по осям
+sensitivity = np.array([0.95, 1.03, 1.00])  # Чувствительность по осям Безразмерная
 
-noise_std = np.array([0.3, 0.3, 0.3])       # Шум по каждой оси
+noise_std = np.array([0.3, 0.3, 0.3])       # Шум по каждой оси нТл
 
-ref_noise_std = 0.1                         # Шум эталонного магнитометра
+ref_noise_std = 0.1                         # Шум эталонного магнитометра нТл
 
-detection_threshold = 1.0                   # Порог чувствительности эталонного
+detection_threshold = 1.0                   # Порог чувствительности эталонного нТл
 
 rotate_axes = True                          # Применять поворот осей
 
