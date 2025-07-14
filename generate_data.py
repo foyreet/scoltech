@@ -2,82 +2,95 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation as R
 
-# === ПАРАМЕТРЫ ===
-bias = np.array([2.0, -1.5, 0.8])
-A = np.array([[1.05, 0.02, 0.01], [0.01, 0.98, -0.03], [-0.01, 0.02, 1.02]])
-sensitivity = np.array([0.95, 1.03, 1.00])
-noise_std = np.array([0.3, 0.3, 0.3])
-ref_noise_std = 0.1
-detection_threshold = 1.0
-rotate_axes = True
+# Константные параметры
 
-B_magnitude = 50  # нТл
+bias = np.array([2.0, -1.5, 0.8])  # Смещение (bias)
 
-# Сканируем по азимуту и углу наклона
-phi_list = np.arange(0, 360, 20)
-theta_list = np.arange(10, 80, 10)  # от 10° до 70°
+A = np.array([                   # Матрица искажений (soft-iron)
+    [1.05, 0.02, 0.01],
+    [0.01, 0.98, -0.03],
+    [-0.01, 0.02, 1.02]
+])
 
-records = []
+sensitivity = np.array([0.95, 1.03, 1.00])  # Чувствительность по осям
 
-for theta_deg in theta_list:
-    for phi_deg in phi_list:
-        theta = np.radians(theta_deg)
-        phi = np.radians(phi_deg)
+noise_std = np.array([0.3, 0.3, 0.3])       # Шум по каждой оси
 
-        # Истинный вектор поля
-        B_real = np.array([
-            B_magnitude * np.cos(theta) * np.cos(phi),
-            B_magnitude * np.cos(theta) * np.sin(phi),
-            B_magnitude * np.sin(theta)
-        ])
+ref_noise_std = 0.1                         # Шум эталонного магнитометра
 
-        # Вращение на платформе вокруг Z (имитация поворота устройства)
-        for angle_deg in range(0, 360, 30):
-            angle_rad = np.radians(angle_deg)
+detection_threshold = 1.0                   # Порог чувствительности эталонного
 
-            # Вращаем вокруг оси Z
-            B_rot = np.array([
-                B_real[0] * np.cos(angle_rad) - B_real[1] * np.sin(angle_rad),
-                B_real[0] * np.sin(angle_rad) + B_real[1] * np.cos(angle_rad),
-                B_real[2]
-            ])
+rotate_axes = True                          # Применять поворот осей
 
-            # Поворот осей устройства (фиксированный)
-            if rotate_axes:
-                rot_matrix = R.from_euler('xyz', [2, -1, 3], degrees=True).as_matrix()
-                B_rot = B_rot @ rot_matrix.T
+# Задание направления и величины геомагнитного поля
 
-            # Добавляем шум и отсечение
-            ref = B_rot + np.random.normal(0, ref_noise_std, 3)
-            ref = np.where(np.abs(ref) < detection_threshold, 0, ref)
+B_magnitude = 50 # нТл модуль вектора магнитного поля
+theta_deg = 45 # угол между вектором поля и горизонтальной плоскостью
+phi_deg = 90 # азимут: угол по горизонту. Восток
 
-            # Температура
-            temperature = 20 + 10 * np.sin(np.radians(angle_deg))
+theta = np.radians(theta_deg)
+phi = np.radians(phi_deg)
 
-            bias_temp_coef = np.array([0.01, -0.015, 0.005])
-            sens_temp_coef = np.array([0.002, 0.001, -0.001])
+B_real = np.array([
+    B_magnitude * np.cos(theta) * np.cos(phi),
+    B_magnitude * np.cos(theta) * np.sin(phi),
+    B_magnitude * np.sin(theta)
+])
 
-            bias_temp = bias + (temperature - 25) * bias_temp_coef
-            sensitivity_temp = sensitivity + (temperature - 25) * sens_temp_coef
+# Эталонные данные 
+angles_deg = np.arange(0, 360, 10)  
+angles_rad = np.radians(angles_deg)
 
-            raw = ref * sensitivity_temp
-            raw = raw @ A.T + bias_temp
-            raw += np.random.normal(0, noise_std)
+# Симуляция поворота на поворотном столе 
+# Вращаем B_real вокруг оси Z (плоскость вращения)
+# Формула взяла из поворота вектора в 2D плоскости
 
-            records.append({
-                "angle_deg": angle_deg,
-                "temperature_C": temperature,
-                "theta_deg": theta_deg,
-                "phi_deg": phi_deg,
-                "raw_x": raw[0],
-                "raw_y": raw[1],
-                "raw_z": raw[2],
-                "ref_x": ref[0],
-                "ref_y": ref[1],
-                "ref_z": ref[2]
-            })
+M_ref = np.array([
+    [
+        B_real[0] * np.cos(a) - B_real[1] * np.sin(a),
+        B_real[0] * np.sin(a) + B_real[1] * np.cos(a),
+        B_real[2]
+    ]
+    for a in angles_rad
+])
 
-# Сохраняем
-df = pd.DataFrame(records)
-df.to_csv("calibration_data.csv", index=False)
-print(f"Генерация завершена: {len(df)} записей")
+# Поворот осей
+
+if rotate_axes:
+    rot_matrix = R.from_euler('xyz', [2, -1, 3], degrees=True).as_matrix()
+    M_ref = M_ref @ rot_matrix.T
+
+# 2. Искажения: bias + scale + soft-iron (матрица) + шум 
+
+ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape)  # шум
+M_ref_noisy = M_ref + ref_noise
+M_ref_final = np.where(np.abs(M_ref_noisy) < detection_threshold, 0, M_ref_noisy)
+
+# === Температурная модель ===
+temperatures = 20 + 10 * np.sin(np.radians(angles_deg))  # [20°C .. 30°C]
+
+bias_temp_coef = np.array([0.01, -0.015, 0.005])
+sens_temp_coef = np.array([0.002, 0.001, -0.001])
+
+bias_temp = bias + (temperatures[:, None] - 25) * bias_temp_coef
+sensitivity_temp = sensitivity + (temperatures[:, None] - 25) * sens_temp_coef
+
+# === Калибруемый магнитометр ===
+M_raw = M_ref_final * sensitivity_temp
+M_raw = (M_raw @ A.T) + bias_temp
+
+noise = np.random.normal(0, noise_std, M_ref.shape)
+M_raw += noise
+
+# 3. Сохраняем в CSV 
+
+df = pd.DataFrame({
+    "angle_deg": angles_deg,
+    "temperature_C": temperatures,
+    "raw_x": M_raw[:, 0],
+    "raw_y": M_raw[:, 1],
+    "raw_z": M_raw[:, 2],
+    "ref_x": M_ref_final[:, 0],
+    "ref_y": M_ref_final[:, 1],
+    "ref_z": M_ref_final[:, 2],
+})
