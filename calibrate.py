@@ -43,12 +43,22 @@ A = A_scaled / scale[:, None]
 M_calibrated = (M_raw_corrected - b) @ A
 
 # === НЕЛИНЕЙНАЯ КОРРЕКЦИЯ ===
-residuals = M_calibrated - M_ref
 x, y, z = M_calibrated[:, 0], M_calibrated[:, 1], M_calibrated[:, 2]
-X_nl = np.column_stack([x**2, y**2, z**2, x*y, x*z, y*z])
-models = [LinearRegression().fit(X_nl, residuals[:, i]) for i in range(3)]
-nonlinear_corr = np.column_stack([models[i].predict(X_nl) for i in range(3)])
-M_calibrated -= nonlinear_corr
+
+X_nl_z = np.column_stack([
+    x**2, y**2, z**2,
+    x*y, x*z, y*z,
+    x**3, y**3, z**3,
+    x * z**2, y * z**2,
+    x * y**2, x**2 * y, x**2 * z, y**2 * z
+])
+
+residual_z = M_calibrated[:, 2] - M_ref[:, 2]
+model_z = LinearRegression().fit(X_nl_z, residual_z)
+nonlinear_corr_z = model_z.predict(X_nl_z)
+
+M_calibrated[:, 2] -= nonlinear_corr_z
+
 
 # === ОЦЕНКА КАЧЕСТВА ===
 error = np.linalg.norm(M_calibrated - M_ref, axis=1)
@@ -97,8 +107,11 @@ plt.close()
 calibration = {
     "bias": b.tolist(),
     "A": A.tolist(),
-    "nonlinear_coeffs": [m.coef_.tolist() for m in models],
-    "nonlinear_intercepts": [m.intercept_ for m in models],
+    "nonlinear_coeffs": [m.coef_.tolist() for m in model_z],
+    "nonlinear_z_model": {
+        "coefficients": model_z.coef_.tolist(),
+        "intercept": model_z.intercept_
+    },
     "temperature_ref": T_ref,
     "bias_temp_coef": bias_temp_coef.tolist(),
     "sens_temp_coef": sens_temp_coef.tolist()
