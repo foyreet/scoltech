@@ -107,7 +107,6 @@ plt.close()
 calibration = {
     "bias": b.tolist(),
     "A": A.tolist(),
-    "nonlinear_coeffs": [m.coef_.tolist() for m in model_z],
     "nonlinear_z_model": {
         "coefficients": model_z.coef_.tolist(),
         "intercept": model_z.intercept_
