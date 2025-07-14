@@ -30,11 +30,18 @@ B_real = np.array([
 angles_deg = np.arange(0, 360, 10)  
 angles_rad = np.radians(angles_deg)
 
-# Эталон: вращение в горизонтальной плоскости + постоянное Z
-ref_x = np.cos(angles_rad) * 50
-ref_y = np.sin(angles_rad) * 50
-ref_z = np.ones_like(ref_x) * 30
-M_ref = np.vstack((ref_x, ref_y, ref_z)).T
+# Симуляция поворота на поворотном столе 
+# Вращаем B_real вокруг оси Z (плоскость вращения)
+# Формула взяла из поворота вектора в 2D плоскости
+
+M_ref = np.array([
+    [
+        B_real[0] * np.cos(a) - B_real[1] * np.sin(a),
+        B_real[0] * np.sin(a) + B_real[1] * np.cos(a),
+        B_real[2]
+    ]
+    for a in angles_rad
+])
 
 # 2. Искажения: bias + scale + soft-iron (матрица) + шум 
 
