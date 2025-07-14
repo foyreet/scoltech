@@ -68,9 +68,9 @@ df = pd.DataFrame({
     "raw_x": M_raw[:, 0],
     "raw_y": M_raw[:, 1],
     "raw_z": M_raw[:, 2],
-    "ref_x": M_ref[:, 0],
-    "ref_y": M_ref[:, 1],
-    "ref_z": M_ref[:, 2],
+    "ref_x": M_ref_final[:, 0],
+    "ref_y": M_ref_final[:, 1],
+    "ref_z": M_ref_final[:, 2],
 })
 
 df.to_csv("calibration_data.csv", index=False)
