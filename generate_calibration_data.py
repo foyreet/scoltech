@@ -28,6 +28,7 @@ M_raw = (M_ref @ A.T) + bias + noise
 # 3. Сохраняем в CSV 
 
 df = pd.DataFrame({
+    "angle_deg": angles_deg,
     "raw_x": M_raw[:, 0],
     "raw_y": M_raw[:, 1],
     "raw_z": M_raw[:, 2],
