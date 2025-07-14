@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.spatial.transform import Rotation as R
 # Ввод параметров с клавиатуры
 
 print("Введите bias (через пробел, 3 значения):")
