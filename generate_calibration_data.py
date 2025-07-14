@@ -1,7 +1,17 @@
 import numpy as np
 import pandas as pd
+# Ввод параметров с клавиатуры
 
-# 1. Эталонные данные 
+print("Введите bias (через пробел, 3 значения):")
+bias = np.array(list(map(float, input().split())))
+
+print("Введите значения матрицы A (в строках, 9 значений через пробел):")
+A = np.array(list(map(float, input().split()))).reshape((3, 3))
+
+print("Введите уровень шума (одно число):")
+noise_std = float(input())
+
+# Эталонные данные 
 angles_deg = np.arange(0, 360, 10)  
 angles_rad = np.radians(angles_deg)
 
@@ -13,14 +23,7 @@ M_ref = np.vstack((ref_x, ref_y, ref_z)).T
 
 # 2. Искажения: bias + scale + soft-iron (матрица) + шум 
 
-bias = np.array([5, -3, 2]) 
-A = np.array([
-    [1.1, 0.05, 0.0],
-    [0.02, 0.95, 0.01],
-    [0.0, 0.0, 1.05]
-])  
-
-noise = np.random.normal(0, 0.3, M_ref.shape)  # шум
+noise = np.random.normal(0, noise_std, M_ref.shape)  # шум
 
 # Применяем искажения
 M_raw = (M_ref @ A.T) + bias + noise
