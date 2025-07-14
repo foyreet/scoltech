@@ -1,30 +1,26 @@
 import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation as R
-# Ввод параметров с клавиатуры
 
-print("Введите bias (через пробел, 3 значения):")
-bias = np.array(list(map(float, input().split())))
+# Константные параметры
 
-print("Введите матрицу искажений A (в строках, 9 значений через пробел):")
-A = np.array(list(map(float, input().split()))).reshape((3, 3))
+bias = np.array([2.0, -1.5, 0.8])  # Смещение (bias)
 
-print("Введите чувствительность по каждой оси (3 значения):")
-sensitivity = np.array(list(map(float, input().split())))
+A = np.array([                   # Матрица искажений (soft-iron)
+    [1.05, 0.02, 0.01],
+    [0.01, 0.98, -0.03],
+    [-0.01, 0.02, 1.02]
+])
 
-print("Введите шум по каждой оси (σx σy σz):")
-noise_std = np.array(list(map(float, input().split())))
+sensitivity = np.array([0.95, 1.03, 1.00])  # Чувствительность по осям
 
-print("Введите уровень шума эталонного магнитометра:")
-ref_noise_std = float(input())
+noise_std = np.array([0.3, 0.3, 0.3])       # Шум по каждой оси
 
-print("Введите порог чувствительности эталонного магнитометра:")
-detection_threshold = float(input())
+ref_noise_std = 0.1                         # Шум эталонного магнитометра
 
-print("Нужно ли применять поворот осей? (yes/no):")
-rotate_axes = input().strip().lower() == "yes"
+detection_threshold = 1.0                   # Порог чувствительности эталонного
 
-
+rotate_axes = True                          # Применять поворот осей
 
 # Задание направления и величины геомагнитного поля
 
@@ -67,25 +63,31 @@ if rotate_axes:
 # 2. Искажения: bias + scale + soft-iron (матрица) + шум 
 
 noise = np.random.normal(0, ref_noise_std, M_ref.shape)  # шум
-
-# Добавляем шум, деградацию и порог
-# генерация шума распределённого нормально
-ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape) 
-# добавление шума к эталонным данным
-M_ref_noisy = M_ref + ref_noise
-# Убираем слабые сигналы
+M_ref_noisy = M_ref + ref_noise_std
 M_ref_final = np.where(np.abs(M_ref_noisy) < detection_threshold, 0, M_ref_noisy)
 
-# Калибруемый магнитометр
-M_raw = M_ref_final * sensitivity  # применяем чувствительность
-M_raw = (M_raw @ A.T) + bias  # применяем искажения
+# === Температурная модель ===
+temperatures = 20 + 10 * np.sin(np.radians(angles_deg))  # [20°C .. 30°C]
+
+bias_temp_coef = np.array([0.01, -0.015, 0.005])
+sens_temp_coef = np.array([0.002, 0.001, -0.001])
+
+bias_temp = bias + (temperatures[:, None] - 25) * bias_temp_coef
+sensitivity_temp = sensitivity + (temperatures[:, None] - 25) * sens_temp_coef
+
+# === Калибруемый магнитометр ===
+M_raw = M_ref_final * sensitivity_temp
+M_raw = (M_raw @ A.T) + bias_temp
+
 noise = np.random.normal(0, noise_std, M_ref.shape)
-M_raw += noise  # добавляем шум
+M_raw += noise
+
 
 # 3. Сохраняем в CSV 
 
 df = pd.DataFrame({
     "angle_deg": angles_deg,
+    "temperature_C": temperatures,
     "raw_x": M_raw[:, 0],
     "raw_y": M_raw[:, 1],
     "raw_z": M_raw[:, 2],
