@@ -6,10 +6,6 @@ from sklearn.linear_model import Ridge
 
 # === ЗАГРУЗКА ДАННЫХ ===
 df = pd.read_csv("calibration_data.csv")
-if "theta_deg" in df.columns:
-    theta_deg = df["theta_deg"].to_numpy()
-if "phi_deg" in df.columns:
-    phi_deg = df["phi_deg"].to_numpy()
 M_raw = df[["raw_x", "raw_y", "raw_z"]].to_numpy()
 M_ref = df[["ref_x", "ref_y", "ref_z"]].to_numpy()
 temperatures = df["temperature_C"].to_numpy()

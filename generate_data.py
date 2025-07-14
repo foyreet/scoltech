@@ -94,3 +94,4 @@ df = pd.DataFrame({
     "ref_y": M_ref_final[:, 1],
     "ref_z": M_ref_final[:, 2],
 })
+df.to_csv("calibration_data.csv", index=False)
