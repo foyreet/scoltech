@@ -62,8 +62,8 @@ if rotate_axes:
 
 # 2. Искажения: bias + scale + soft-iron (матрица) + шум 
 
-noise = np.random.normal(0, ref_noise_std, M_ref.shape)  # шум
-M_ref_noisy = M_ref + ref_noise_std
+ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape)  # шум
+M_ref_noisy = M_ref + ref_noise
 M_ref_final = np.where(np.abs(M_ref_noisy) < detection_threshold, 0, M_ref_noisy)
 
 # === Температурная модель ===
