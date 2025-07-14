@@ -33,9 +33,11 @@ M_calibrated = (M_raw_corrected - b) @ A
 x, y, z = M_calibrated[:, 0], M_calibrated[:, 1], M_calibrated[:, 2]
 
 X_nl_z = np.column_stack([
+    x, y, z,
     x**2, y**2, z**2,
     x*y, x*z, y*z,
-    z**3
+    x**3, y**3, z**3,
+    x**2 * y, x * y**2, x * z**2, y * z**2
 ])
 
 residual_z = M_calibrated[:, 2] - M_ref[:, 2]
