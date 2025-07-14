@@ -91,7 +91,11 @@ calibration = {
     "nonlinear_z_model": {
         "coefficients": model_z.coef_.tolist(),
         "intercept": model_z.intercept_,
-        "features": ["x^2", "y^2", "z^2", "xy", "xz", "yz", "z^3"],
+        "features": ["x", "y", "z",
+            "x^2", "y^2", "z^2",
+            "xy", "xz", "yz",
+            "x^3", "y^3", "z^3",
+            "x^2*y", "x*y^2", "x*z^2", "y*z^2"],
         "model_type": "Ridge(alpha=0.1)"
     },
     "temperature_ref": T_ref,
