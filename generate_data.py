@@ -50,6 +50,17 @@ noise = np.random.normal(0, noise_std, M_ref.shape)  # шум
 # Применяем искажения
 M_raw = (M_ref @ A.T) + bias + noise
 
+# Добавляем шум, деградацию и порог
+ref_noise_std = 0.1 # среднеквадратическое отклонение шума
+# генерация шума распределённого нормально
+ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape) 
+# добавление шума к эталонным данным
+M_ref_noisy = M_ref + ref_noise
+# порог чувствительности эталонного магнитометра
+detection_threshold = 1.0
+# Убираем слабые сигналы
+M_ref_final = np.where(np.abs(M_ref_noisy) < detection_threshold, 0, M_ref_noisy)
+
 # 3. Сохраняем в CSV 
 
 df = pd.DataFrame({
