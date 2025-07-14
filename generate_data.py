@@ -11,6 +11,21 @@ A = np.array(list(map(float, input().split()))).reshape((3, 3))
 print("Введите уровень шума (одно число):")
 noise_std = float(input())
 
+# Задание направления и величины геомагнитного поля
+
+B_magnitude = 50 # нТл модуль вектора магнитного поля
+theta_deg = 45 # угол между вектором поля и горизонтальной плоскостью
+phi_deg = 90 # азимут: угол по горизонту. Восток
+
+theta = np.radians(theta_deg)
+phi = np.radians(phi_deg)
+
+B_real = np.array([
+    B_magnitude * np.cos(theta) * np.cos(phi),
+    B_magnitude * np.cos(theta) * np.sin(phi),
+    B_magnitude * np.sin(theta)
+])
+
 # Эталонные данные 
 angles_deg = np.arange(0, 360, 10)  
 angles_rad = np.radians(angles_deg)
