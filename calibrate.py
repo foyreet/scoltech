@@ -39,7 +39,8 @@ for i, label in enumerate(['X', 'Y', 'Z']):
     plt.title(f"Аппроксимация по оси {label}")
     plt.legend()
 plt.tight_layout()
-plt.show()
+plt.savefig("calibration_plot.png")
+plt.close()
 
 # === СОХРАНЕНИЕ ===
 calibration = {
