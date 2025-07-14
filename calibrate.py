@@ -8,17 +8,11 @@ from sklearn.linear_model import Ridge
 df = pd.read_csv("calibration_data.csv")
 M_raw = df[["raw_x", "raw_y", "raw_z"]].to_numpy()
 M_ref = df[["ref_x", "ref_y", "ref_z"]].to_numpy()
-temperatures = df["temperature_C"].to_numpy()
 angles = df["angle_deg"].to_numpy()
 
-# === ТЕМПЕРАТУРНАЯ КОМПЕНСАЦИЯ ===
-bias_temp_coef = np.array([0.01, -0.015, 0.005])
-sens_temp_coef = np.array([0.002, 0.001, -0.001])
-T_ref = 25.0
-
-bias_temp = (temperatures[:, None] - T_ref) * bias_temp_coef
-sensitivity_temp = 1.0 + (temperatures[:, None] - T_ref) * sens_temp_coef
-M_raw_corrected = (M_raw - bias_temp) / sensitivity_temp
+# === БЛОК ТЕМПЕРАТУРНОЙ КОМПЕНСАЦИИ УБРАН ===
+# Используем M_raw без коррекции температуры
+M_raw_corrected = M_raw.copy()
 
 # === КАЛИБРОВКА ===
 b = np.mean(M_raw_corrected - M_ref, axis=0)
@@ -75,14 +69,7 @@ plt.grid(True)
 plt.savefig("error_vs_angle.png")
 plt.close()
 
-plt.figure()
-plt.plot(temperatures, error, 'o-')
-plt.title("Ошибка вектора по температуре")
-plt.xlabel("Температура (°C)")
-plt.ylabel("Ошибка (нТл)")
-plt.grid(True)
-plt.savefig("error_vs_temperature.png")
-plt.close()
+# === График ошибки по температуре убран ===
 
 # === СОХРАНЕНИЕ ===
 calibration = {
@@ -97,10 +84,8 @@ calibration = {
             "x^3", "y^3", "z^3",
             "x^2*y", "x*y^2", "x*z^2", "y*z^2"],
         "model_type": "Ridge(alpha=0.1)"
-    },
-    "temperature_ref": T_ref,
-    "bias_temp_coef": bias_temp_coef.tolist(),
-    "sens_temp_coef": sens_temp_coef.tolist()
+    }
+    # Убраны параметры, связанные с температурой
 }
 
 with open("calibration_result.json", "w") as f:

@@ -25,7 +25,7 @@ rotate_axes = True                          # Применять поворот 
 # Задание направления и величины геомагнитного поля
 
 B_magnitude = 50 # нТл модуль вектора магнитного поля
-theta_deg = 45 # угол между вектором поля и горизонтальной плоскостью
+theta_deg = 45 # угол между вектором поля и горизонтальной плоскости
 phi_deg = 90 # азимут: угол по горизонту. Восток
 
 theta = np.radians(theta_deg)
@@ -43,7 +43,6 @@ angles_rad = np.radians(angles_deg)
 
 # Симуляция поворота на поворотном столе 
 # Вращаем B_real вокруг оси Z (плоскость вращения)
-# Формула взяла из поворота вектора в 2D плоскости
 
 M_ref = np.array([
     [
@@ -60,20 +59,17 @@ if rotate_axes:
     rot_matrix = R.from_euler('xyz', [2, -1, 3], degrees=True).as_matrix()
     M_ref = M_ref @ rot_matrix.T
 
-# 2. Искажения: bias + scale + soft-iron (матрица) + шум 
+# Добавляем шум к эталонным данным и порог детекции
 
-ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape)  # шум
+ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape)
 M_ref_noisy = M_ref + ref_noise
 M_ref_final = np.where(np.abs(M_ref_noisy) < detection_threshold, 0, M_ref_noisy)
 
-# === Температурная модель ===
-temperatures = 20 + 10 * np.sin(np.radians(angles_deg))  # [20°C .. 30°C]
+# === Температурная модель убрана ===
+# Используем константный bias и sensitivity без зависимости от температуры
 
-bias_temp_coef = np.array([0.01, -0.015, 0.005])
-sens_temp_coef = np.array([0.002, 0.001, -0.001])
-
-bias_temp = bias + (temperatures[:, None] - 25) * bias_temp_coef
-sensitivity_temp = sensitivity + (temperatures[:, None] - 25) * sens_temp_coef
+bias_temp = np.tile(bias, (len(angles_deg), 1))            # просто bias
+sensitivity_temp = np.tile(sensitivity, (len(angles_deg), 1))  # просто sensitivity
 
 # === Калибруемый магнитометр ===
 M_raw = M_ref_final * sensitivity_temp
@@ -82,11 +78,10 @@ M_raw = (M_raw @ A.T) + bias_temp
 noise = np.random.normal(0, noise_std, M_ref.shape)
 M_raw += noise
 
-# 3. Сохраняем в CSV 
+# 3. Сохраняем в CSV без температуры
 
 df = pd.DataFrame({
     "angle_deg": angles_deg,
-    "temperature_C": temperatures,
     "raw_x": M_raw[:, 0],
     "raw_y": M_raw[:, 1],
     "raw_z": M_raw[:, 2],
