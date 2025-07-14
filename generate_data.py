@@ -40,4 +40,4 @@ df = pd.DataFrame({
     "ref_z": M_ref[:, 2],
 })
 
-df.to_csv("calibration_data.csv", index=False)
+df.to_csv("data.csv", index=False)
