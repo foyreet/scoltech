@@ -5,11 +5,25 @@ import pandas as pd
 print("Введите bias (через пробел, 3 значения):")
 bias = np.array(list(map(float, input().split())))
 
-print("Введите значения матрицы A (в строках, 9 значений через пробел):")
+print("Введите матрицу искажений A (в строках, 9 значений через пробел):")
 A = np.array(list(map(float, input().split()))).reshape((3, 3))
 
-print("Введите уровень шума (одно число):")
-noise_std = float(input())
+print("Введите чувствительность по каждой оси (3 значения):")
+sensitivity = np.array(list(map(float, input().split())))
+
+print("Введите шум по каждой оси (σx σy σz):")
+noise_std = np.array(list(map(float, input().split())))
+
+print("Введите уровень шума эталонного магнитометра:")
+ref_noise_std = float(input())
+
+print("Введите порог чувствительности эталонного магнитометра:")
+detection_threshold = float(input())
+
+print("Нужно ли применять поворот осей? (yes/no):")
+rotate_axes = input().strip().lower() == "yes"
+
+
 
 # Задание направления и величины геомагнитного поля
 
@@ -43,23 +57,29 @@ M_ref = np.array([
     for a in angles_rad
 ])
 
+# Поворот осей
+
+if rotate_axes:
+    rot_matrix = R.from_euler('xyz', [2, -1, 3], degrees=True).as_matrix()
+    M_ref = M_ref @ rot_matrix.T
+
 # 2. Искажения: bias + scale + soft-iron (матрица) + шум 
 
-noise = np.random.normal(0, noise_std, M_ref.shape)  # шум
-
-# Применяем искажения
-M_raw = (M_ref @ A.T) + bias + noise
+noise = np.random.normal(0, ref_noise_std, M_ref.shape)  # шум
 
 # Добавляем шум, деградацию и порог
-ref_noise_std = 0.1 # среднеквадратическое отклонение шума
 # генерация шума распределённого нормально
 ref_noise = np.random.normal(0, ref_noise_std, M_ref.shape) 
 # добавление шума к эталонным данным
 M_ref_noisy = M_ref + ref_noise
-# порог чувствительности эталонного магнитометра
-detection_threshold = 1.0
 # Убираем слабые сигналы
 M_ref_final = np.where(np.abs(M_ref_noisy) < detection_threshold, 0, M_ref_noisy)
+
+# Калибруемый магнитометр
+M_raw = M_ref_final * sensitivity  # применяем чувствительность
+M_raw = (M_raw @ A.T) + bias  # применяем искажения
+noise = np.random.normal(0, noise_std, M_ref.shape)
+M_raw += noise  # добавляем шум
 
 # 3. Сохраняем в CSV 
 
