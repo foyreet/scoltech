@@ -49,29 +49,6 @@ print(f"Максимальная ошибка: {np.max(error):.3f}")
 print(f"Средняя ошибка по осям: {np.mean(axis_errors, axis=0)}")
 print(f"Максимальная ошибка по осям: {np.max(axis_errors, axis=0)}")
 
-# === ВИЗУАЛИЗАЦИЯ ===
-plt.figure(figsize=(10, 5))
-for i, label in enumerate(['X', 'Y', 'Z']):
-    plt.subplot(1, 3, i + 1)
-    plt.plot(M_ref[:, i], label=f"Ref {label}")
-    plt.plot(M_calibrated[:, i], '--', label=f"Calibrated {label}")
-    plt.title(f"Аппроксимация по оси {label}")
-    plt.legend()
-plt.tight_layout()
-plt.savefig("calibration_plot.png")
-plt.close()
-
-plt.figure()
-plt.plot(angles, error)
-plt.title("Ошибка вектора по углу")
-plt.xlabel("Угол (°)")
-plt.ylabel("Ошибка (нТл)")
-plt.grid(True)
-plt.savefig("error_vs_angle.png")
-plt.close()
-
-# === График ошибки по температуре убран ===
-
 # === СОХРАНЕНИЕ ===
 calibration = {
     "bias": b.tolist(),
@@ -86,7 +63,6 @@ calibration = {
             "x^2*y", "x*y^2", "x*z^2", "y*z^2"],
         "model_type": "Ridge(alpha=0.1)"
     }
-    # Убраны параметры, связанные с температурой
 }
 
 with open("calibration_result.json", "w") as f:

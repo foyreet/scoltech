@@ -79,6 +79,28 @@ def plot_error_histogram(error, fname="figures/error_hist.png"):
     plt.savefig(fname)
     plt.close()
 
+def plot_component_fit(M_ref, M_calibrated, fname="figures/calibration_plot.png"):
+    plt.figure(figsize=(10, 5))
+    for i, label in enumerate(['X', 'Y', 'Z']):
+        plt.subplot(1, 3, i + 1)
+        plt.plot(M_ref[:, i], label=f"Ref {label}")
+        plt.plot(M_calibrated[:, i], '--', label=f"Calibrated {label}")
+        plt.title(f"Аппроксимация по оси {label}")
+        plt.legend()
+    plt.tight_layout()
+    plt.savefig(fname)
+    plt.close()
+
+def plot_error_vs_angle(error, angles, fname="figures/error_vs_angle.png"):
+    plt.figure()
+    plt.plot(angles, error)
+    plt.title("Ошибка вектора по углу")
+    plt.xlabel("Угол (°)")
+    plt.ylabel("Ошибка (нТл)")
+    plt.grid(True)
+    plt.savefig(fname)
+    plt.close()
+
 def save_all_visualizations(m_raw, m_calibrated, m_ref, error, angle_labels):
     plot_ellipses(m_raw, m_calibrated)
     plot_3d_clouds(m_raw, m_calibrated)
@@ -86,3 +108,5 @@ def save_all_visualizations(m_raw, m_calibrated, m_ref, error, angle_labels):
     plot_error_histogram(error)
     angles_deg = angular_error(m_calibrated, m_ref)
     plot_angular_error(angles_deg, angle_labels)
+    plot_component_fit(m_ref, m_calibrated)
+    plot_error_vs_angle(error, angle_labels)
