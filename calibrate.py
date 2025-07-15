@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
-import os
 from sklearn.linear_model import Ridge
+from visualization_all import save_all_visualizations
 
 # === ЗАГРУЗКА ДАННЫХ ===
 df = pd.read_csv("calibration_data.csv")
@@ -94,24 +94,5 @@ with open("calibration_result.json", "w") as f:
 
 print("Готово. Параметры сохранены в calibration_result.json")
 
-os.makedirs("figures", exist_ok=True)
+save_all_visualizations(M_raw, M_calibrated, M_ref, error, angles)
 
-def plot_ellipses(m_raw, m_calibrated, fname_prefix="figures/ellipse"):
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    titles = ['XY', 'YZ', 'ZX']
-    pairs = [(0, 1), (1, 2), (2, 0)]
-
-    for ax, (i, j), title in zip(axes, pairs, titles):
-        ax.scatter(m_raw[:, i], m_raw[:, j], alpha=0.3, s=5, label='Raw')
-        ax.scatter(m_calibrated[:, i], m_calibrated[:, j], alpha=0.3, s=5, label='Calibrated')
-        ax.set_xlabel(['X', 'Y', 'Z'][i])
-        ax.set_ylabel(['X', 'Y', 'Z'][j])
-        ax.set_title(f"{title} projection")
-        ax.axis('equal')
-        ax.legend()
-
-    plt.tight_layout()
-    plt.savefig(f"{fname_prefix}_projections.png")
-    plt.close()
-
-plot_ellipses(M_raw, M_calibrated)
