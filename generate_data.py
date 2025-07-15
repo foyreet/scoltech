@@ -4,7 +4,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Константные параметры
 
-bias = np.array([2.0, -1.5, 0.8])  # Смещение (bias) нТл
+bias = np.array([100.0, -250.0, 600.0])  # Смещение (bias) нТл
 
 A = np.array([                   # Матрица искажений (soft-iron) Безразмерная
     [1.05, 0.02, 0.01],
@@ -14,9 +14,9 @@ A = np.array([                   # Матрица искажений (soft-iron)
 
 sensitivity = np.array([0.95, 1.03, 1.00])  # Чувствительность по осям Безразмерная
 
-noise_std = np.array([0.3, 0.3, 0.3])       # Шум по каждой оси нТл
+noise_std = np.array([0.5, 0.5, 0.5])       # Шум по каждой оси нТл
 
-ref_noise_std = 0.1                         # Шум эталонного магнитометра нТл
+ref_noise_std = 0.2                        # Шум эталонного магнитометра нТл
 
 detection_threshold = 1.0                   # Порог чувствительности эталонного нТл
 
